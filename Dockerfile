@@ -14,6 +14,18 @@ RUN apt-get update \
 
 RUN npm install -g openclaw@2026.4.11 clawhub@latest
 
+# Replace bundled Baileys with patched fork (rossodwyer/Baileys @ 9106cf7e5f)
+# Fixes WhatsApp auth payload bugs: passive flag and non-spec lidDbMigrated field.
+RUN BAILEYS_PATH=$(node -e "console.log(require.resolve('@whiskeysockets/baileys/package.json'))" | xargs dirname) \
+  && echo "Replacing Baileys at $BAILEYS_PATH" \
+  && rm -rf "$BAILEYS_PATH" \
+  && mkdir -p "$BAILEYS_PATH" \
+  && curl -fsSL https://github.com/rossodwyer/Baileys/archive/9106cf7e5f.tar.gz \
+    | tar xz --strip-components=1 -C "$BAILEYS_PATH" \
+  && grep -q "passive: false" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
+  && ! grep -q "lidDbMigrated" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
+  && echo "Baileys patch verified"
+
 # Backward-compatibility shim for older OPENCLAW_ENTRY values.
 RUN mkdir -p /openclaw \
   && ln -sfn /usr/local/lib/node_modules/openclaw/dist /openclaw/dist
