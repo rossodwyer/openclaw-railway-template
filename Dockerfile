@@ -21,7 +21,7 @@ RUN BAILEYS_PATH=$(find /usr/local/lib/node_modules/openclaw -type d -path '*/no
   && echo "Replacing Baileys at $BAILEYS_PATH" \
   && rm -rf "$BAILEYS_PATH" \
   && mkdir -p "$BAILEYS_PATH" \
-  && curl -fsSL https://github.com/rossodwyer/Baileys/archive/9106cf7e5f.tar.gz \
+  && curl -fsSL https://github.com/rossodwyer/Baileys/archive/ef52cef83e.tar.gz \
     | tar xz --strip-components=1 -C "$BAILEYS_PATH" \
   && grep -q "passive: false" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
   && ! grep -q "lidDbMigrated" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
