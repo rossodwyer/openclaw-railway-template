@@ -41,7 +41,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile --prod
 COPY src ./src
-COPY proxy-shim.js ./proxy-shim.js
+COPY proxy-shim.cjs ./proxy-shim.cjs
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 RUN useradd -m -s /bin/bash openclaw \
   && chown -R openclaw:openclaw /app \
@@ -55,7 +55,7 @@ ENV HOMEBREW_CELLAR="/home/linuxbrew/.linuxbrew/Cellar"
 ENV HOMEBREW_REPOSITORY="/home/linuxbrew/.linuxbrew/Homebrew"
 ENV PORT=8080
 ENV OPENCLAW_ENTRY=/usr/local/lib/node_modules/openclaw/dist/entry.js
-ENV NODE_OPTIONS="--require=/app/proxy-shim.js"
+ENV NODE_OPTIONS="--require=/app/proxy-shim.cjs"
 ENV NODE_PATH="/usr/local/lib/node_modules"
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
