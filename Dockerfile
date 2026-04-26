@@ -31,6 +31,9 @@ RUN SESSION_FILE=$(find /usr/local/lib/node_modules/openclaw/dist -maxdepth 1 -n
   && if [ "$PASSIVE_TRUE_COUNT" != "0" ]; then echo "ERROR: still found passive: true (expected 0)"; exit 1; fi \
   && echo "Bundle patches applied successfully"
 
+# Install https-proxy-agent globally so the proxy shim can require() it.
+RUN npm install -g https-proxy-agent@^7.0.0
+
 # Backward-compatibility shim for older OPENCLAW_ENTRY values.
 RUN mkdir -p /openclaw \
   && ln -sfn /usr/local/lib/node_modules/openclaw/dist /openclaw/dist
@@ -38,6 +41,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile --prod
 COPY src ./src
+COPY proxy-shim.js ./proxy-shim.js
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 RUN useradd -m -s /bin/bash openclaw \
   && chown -R openclaw:openclaw /app \
@@ -51,6 +55,8 @@ ENV HOMEBREW_CELLAR="/home/linuxbrew/.linuxbrew/Cellar"
 ENV HOMEBREW_REPOSITORY="/home/linuxbrew/.linuxbrew/Homebrew"
 ENV PORT=8080
 ENV OPENCLAW_ENTRY=/usr/local/lib/node_modules/openclaw/dist/entry.js
+ENV NODE_OPTIONS="--require=/app/proxy-shim.js"
+ENV NODE_PATH="/usr/local/lib/node_modules"
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:8080/setup/healthz || exit 1
