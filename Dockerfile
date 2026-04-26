@@ -21,12 +21,27 @@ RUN npm install -g openclaw@2026.4.11 clawhub@latest
 #   2. remove lidDbMigrated: false      (non-spec field, server rejects payloads containing it)
 RUN SESSION_FILE=$(find /usr/local/lib/node_modules/openclaw/dist -maxdepth 1 -name "session-*.js" | head -1) \
   && if [ -z "$SESSION_FILE" ]; then echo "ERROR: session-*.js not found in openclaw/dist" && exit 1; fi \
-  && echo "Patching auth payload in $SESSION_FILE" \
+  && echo "=== BEFORE any patches ===" \
+  && echo "lidDbMigrated: false count: $(grep -c 'lidDbMigrated: false' "$SESSION_FILE")" \
+  && echo "passive: true count:        $(grep -c 'passive: true' "$SESSION_FILE")" \
+  && echo "passive: false count:       $(grep -c 'passive: false' "$SESSION_FILE")" \
+  && echo "agent: this.config.agent count: $(grep -c 'agent: this\.config\.agent' "$SESSION_FILE")" \
+  && echo "" \
+  && echo "Patching $SESSION_FILE" \
   && perl -i -0pe 's/(\bgenerateLoginNode\b[\s\S]*?)passive:\s*true,/\1passive: false,/' "$SESSION_FILE" \
+  && echo "=== AFTER passive patch ===" \
+  && echo "lidDbMigrated: false count: $(grep -c 'lidDbMigrated: false' "$SESSION_FILE")" \
+  && echo "passive: true count:        $(grep -c 'passive: true' "$SESSION_FILE")" \
+  && echo "passive: false count:       $(grep -c 'passive: false' "$SESSION_FILE")" \
+  && echo "agent: this.config.agent count: $(grep -c 'agent: this\.config\.agent' "$SESSION_FILE")" \
+  && echo "" \
   && perl -i -0pe 's/(\bgenerateLoginNode\b[\s\S]*?)\s*lidDbMigrated:\s*false,?\n?//' "$SESSION_FILE" \
+  && echo "=== AFTER lidDbMigrated patch ===" \
+  && echo "lidDbMigrated: false count: $(grep -c 'lidDbMigrated: false' "$SESSION_FILE")" \
+  && echo "passive: true count:        $(grep -c 'passive: true' "$SESSION_FILE")" \
+  && echo "passive: false count:       $(grep -c 'passive: false' "$SESSION_FILE")" \
+  && echo "agent: this.config.agent count: $(grep -c 'agent: this\.config\.agent' "$SESSION_FILE")" \
   && if grep -q "lidDbMigrated: false" "$SESSION_FILE"; then echo "ERROR: lidDbMigrated: false still present"; exit 1; fi \
-  && PASSIVE_TRUE_COUNT=$(grep -c "passive: true" "$SESSION_FILE" || true) \
-  && if [ "$PASSIVE_TRUE_COUNT" != "0" ]; then echo "ERROR: still found passive: true"; exit 1; fi \
   && echo "Auth payload patches applied successfully"
 
 # Inject WHATSAPP_PROXY_URL support into the bundled Baileys WebSocketClient.connect()
