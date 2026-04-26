@@ -11,6 +11,8 @@ RUN apt-get update \
     build-essential \
     zip \
   && rm -rf /var/lib/apt/lists/*
+
+  # Force rebuild from this point: 2026-04-26 fresh
 RUN npm install -g openclaw@2026.4.11 clawhub@latest
 
 # Patch the bundled Baileys auth payload bugs in OpenClaw's session-*.js
