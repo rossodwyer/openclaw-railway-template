@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "[startup] WHATSAPP_PROXY_URL is set: ${WHATSAPP_PROXY_URL:+yes}${WHATSAPP_PROXY_URL:-no}"
 set -e
 
 chown -R openclaw:openclaw /data
