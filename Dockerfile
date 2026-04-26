@@ -28,8 +28,6 @@ RUN BAILEYS_PATH=$(find /usr/local/lib/node_modules/openclaw -type d -path '*/no
   && grep -q "WHATSAPP_PROXY_URL" "$BAILEYS_PATH/lib/Socket/Client/websocket.js" \
   && echo "Baileys patch verified at $BAILEYS_PATH"
 
-  echo "[startup] WHATSAPP_PROXY_URL is set: ${WHATSAPP_PROXY_URL:+yes}${WHATSAPP_PROXY_URL:-no}"
-
 # Backward-compatibility shim for older OPENCLAW_ENTRY values.
 RUN mkdir -p /openclaw \
   && ln -sfn /usr/local/lib/node_modules/openclaw/dist /openclaw/dist
