@@ -21,9 +21,10 @@ RUN BAILEYS_PATH=$(find /usr/local/lib/node_modules/openclaw -type d -path '*/no
   && echo "Replacing Baileys at $BAILEYS_PATH" \
   && rm -rf "$BAILEYS_PATH" \
   && mkdir -p "$BAILEYS_PATH" \
-  && curl -fsSL https://github.com/rossodwyer/Baileys/archive/97431db979.tar.gz \
+  && curl -fsSL https://github.com/rossodwyer/Baileys/archive/40510ed8d6.tar.gz \
     | tar xz --strip-components=1 -C "$BAILEYS_PATH" \
   && grep -q "passive: false" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
+  && grep -q "baileys-debug.log" "$BAILEYS_PATH/lib/Socket/Client/websocket.js" \
   && ! grep -q "lidDbMigrated" "$BAILEYS_PATH/lib/Utils/validate-connection.js" \
   && grep -q "WHATSAPP_PROXY_URL" "$BAILEYS_PATH/lib/Socket/Client/websocket.js" \
   && echo "Baileys patch verified at $BAILEYS_PATH"
