@@ -14,7 +14,26 @@ with open(path, 'r') as f:
 print(f"File length: {len(content)}")
 
 target = 'agent: this.config.agent'
-replacement = 'agent: this.config.agent || (process.env.WHATSAPP_PROXY_URL && /whatsapp\\.(net|com)/i.test(this.url) && globalThis.__HttpsProxyAgent__ ? new globalThis.__HttpsProxyAgent__(process.env.WHATSAPP_PROXY_URL) : void 0)'
+replacement = (
+    'agent: (function(_url, _explicit) {'
+        'try {'
+            'var _isWA = /whatsapp\\.(net|com)/i.test(_url || "");'
+            'var _proxyUrl = process.env.WHATSAPP_PROXY_URL;'
+            'var _decision = _explicit ? "explicit-agent" : (!_proxyUrl ? "no-env-var" : (!_isWA ? "non-whatsapp-url" : (!globalThis.__HttpsProxyAgent__ ? "no-global" : "use-proxy")));'
+            'if (globalThis.__fs__) {'
+                'globalThis.__fs__.appendFileSync("/tmp/proxy-decision.log", "[" + new Date().toISOString() + "] url=" + _url + " decision=" + _decision + "\\n");'
+            '}'
+            'if (_explicit) return _explicit;'
+            'if (_decision === "use-proxy") return new globalThis.__HttpsProxyAgent__(_proxyUrl);'
+            'return undefined;'
+        '} catch (_e) {'
+            'if (globalThis.__fs__) {'
+                'try { globalThis.__fs__.appendFileSync("/tmp/proxy-decision.log", "[" + new Date().toISOString() + "] ERROR: " + (_e && _e.message) + "\\n"); } catch(_){}'
+            '}'
+            'return _explicit || undefined;'
+        '}'
+    '})(this.url, this.config.agent)'
+)
 
 count = content.count(target)
 print(f"Target match count: {count}")
