@@ -27,12 +27,12 @@ dump_counts() {
 dump_counts "BEFORE"
 
 echo "=== Patch 1: passive ==="
-perl -i -0pe 's/(\bgenerateLoginNode\b[\s\S]*?)passive:\s*true,/\1passive: false,/' "$SESSION_FILE"
+perl -i -pe 's/passive: true,$/passive: false,/' "$SESSION_FILE"
 echo "perl rc=$?"
 dump_counts "AFTER patch 1"
 
 echo "=== Patch 2: lidDbMigrated ==="
-perl -i -0pe 's/(\bgenerateLoginNode\b[\s\S]*?)\s*lidDbMigrated:\s*false,?\n?//' "$SESSION_FILE"
+perl -i -ne 'print unless /^\s*lidDbMigrated:\s*false\s*,?\s*$/' "$SESSION_FILE"
 echo "perl rc=$?"
 dump_counts "AFTER patch 2"
 
