@@ -14,7 +14,7 @@ with open(path, 'r') as f:
 print(f"File length: {len(content)}")
 
 target = 'agent: this.config.agent'
-replacement = 'agent: this.config.agent || (process.env.WHATSAPP_PROXY_URL && /whatsapp\\.(net|com)/i.test(this.url) ? new (require("https-proxy-agent").HttpsProxyAgent)(process.env.WHATSAPP_PROXY_URL) : void 0)'
+replacement = 'agent: this.config.agent || (process.env.WHATSAPP_PROXY_URL && /whatsapp\\.(net|com)/i.test(this.url) && globalThis.__HttpsProxyAgent__ ? new globalThis.__HttpsProxyAgent__(process.env.WHATSAPP_PROXY_URL) : void 0)'
 
 count = content.count(target)
 print(f"Target match count: {count}")
