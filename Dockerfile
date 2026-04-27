@@ -28,6 +28,7 @@ RUN mkdir -p /openclaw \
   && ln -sfn /usr/local/lib/node_modules/openclaw/dist /openclaw/dist
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
+COPY proxy-bootstrap.cjs /app/proxy-bootstrap.cjs
 RUN corepack enable && pnpm install --frozen-lockfile --prod
 COPY src ./src
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
@@ -44,6 +45,7 @@ ENV HOMEBREW_REPOSITORY="/home/linuxbrew/.linuxbrew/Homebrew"
 ENV PORT=8080
 ENV OPENCLAW_ENTRY=/usr/local/lib/node_modules/openclaw/dist/entry.js
 ENV NODE_PATH="/usr/local/lib/node_modules"
+ENV NODE_OPTIONS="--require=/app/proxy-bootstrap.cjs"
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -f http://localhost:8080/setup/healthz || exit 1
