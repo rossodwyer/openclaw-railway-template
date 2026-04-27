@@ -15,10 +15,9 @@ RUN apt-get update \
   # Force rebuild from this point: 2026-04-26 fresh
 RUN npm install -g openclaw@2026.4.11 clawhub@latest
 
-# Patch the bundled Baileys auth payload bugs and inject WHATSAPP_PROXY_URL support
-# into OpenClaw's session-*.js. All three patches in one perl invocation, with
-# diagnostic output written to a file for post-mortem inspection if needed.
+# Patch OpenClaw's bundled Baileys: auth fixes + WHATSAPP_PROXY_URL injection
 COPY --chmod=755 patch-bundle.sh /tmp/patch-bundle.sh
+COPY proxy-patch.py /tmp/proxy-patch.py
 RUN /tmp/patch-bundle.sh
 
 # https-proxy-agent needs to be globally installed so the bundled require() can resolve it
