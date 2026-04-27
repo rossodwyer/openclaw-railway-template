@@ -20,6 +20,7 @@ dump_counts() {
   echo "  lidDbMigrated: false     : $(grep -c 'lidDbMigrated: false' "$SESSION_FILE")" >> "$DIAG"
   echo "  passive: true            : $(grep -c 'passive: true' "$SESSION_FILE")" >> "$DIAG"
   echo "  passive: false           : $(grep -c 'passive: false' "$SESSION_FILE")" >> "$DIAG"
+  echo "  WHATSAPP_PROXY_URL refs  : $(grep -c 'WHATSAPP_PROXY_URL' "$SESSION_FILE")" >> "$DIAG"
 }
 
 dump_counts "BEFORE"
@@ -33,13 +34,32 @@ perl -i -0pe 's/(\bgenerateLoginNode\b[\s\S]*?)\s*lidDbMigrated:\s*false,?\n?//'
 dump_counts "AFTER lidDbMigrated patch"
 
 # Patch 3: inject WHATSAPP_PROXY_URL agent into WebSocketClient.connect()
-perl -i -pe 's|agent: this\.config\.agent|agent: this.config.agent || (process.env.WHATSAPP_PROXY_URL && /whatsapp\.(net|com)/i.test(this.url) ? new (require("https-proxy-agent").HttpsProxyAgent)(process.env.WHATSAPP_PROXY_URL) : void 0)|' "$SESSION_FILE"
-dump_counts "AFTER proxy patch"
+# Use python instead of perl/sed because the replacement contains shell/regex metacharacters.
+python3 - "$SESSION_FILE" <<'PYEOF'
+import sys
+path = sys.argv[1]
+with open(path, 'r') as f:
+    content = f.read()
 
-echo "" >> "$DIAG"
-echo "=== Final state ===" >> "$DIAG"
-echo "WHATSAPP_PROXY_URL refs : $(grep -c 'WHATSAPP_PROXY_URL' "$SESSION_FILE")" >> "$DIAG"
-echo "" >> "$DIAG"
+target = 'agent: this.config.agent'
+replacement = 'agent: this.config.agent || (process.env.WHATSAPP_PROXY_URL && /whatsapp\\.(net|com)/i.test(this.url) ? new (require("https-proxy-agent").HttpsProxyAgent)(process.env.WHATSAPP_PROXY_URL) : void 0)'
+
+count = content.count(target)
+if count == 0:
+    print('ERROR: target string not found for proxy patch')
+    sys.exit(1)
+if count > 1:
+    print(f'ERROR: target string found {count} times; expected exactly 1 to avoid unintended replacements')
+    sys.exit(1)
+
+new_content = content.replace(target, replacement, 1)
+with open(path, 'w') as f:
+    f.write(new_content)
+
+print('Proxy patch applied (1 replacement)')
+PYEOF
+
+dump_counts "AFTER proxy patch"
 
 # Print diagnostic to stdout so the build log captures it
 cat "$DIAG"
