@@ -41,6 +41,29 @@ python3 /tmp/proxy-patch.py "$SESSION_FILE"
 echo "python rc=$?"
 dump_counts "AFTER patch 3"
 
+echo "=== Patch 4: noise.finishInit await removal ==="
+BEFORE_AWAIT=$(grep -c "await noise\.finishInit" "$SESSION_FILE")
+echo "BEFORE: await noise.finishInit count = $BEFORE_AWAIT (expecting 1)"
+if [ "$BEFORE_AWAIT" != "1" ]; then
+  echo "FAIL: expected exactly 1 'await noise.finishInit' before patch"
+  exit 1
+fi
+perl -i -pe 's/await noise\.finishInit\(\);/noise.finishInit();/' "$SESSION_FILE"
+echo "perl rc=$?"
+AFTER_AWAIT=$(grep -c "await noise\.finishInit" "$SESSION_FILE")
+AFTER_NOISE=$(grep -c "noise\.finishInit()" "$SESSION_FILE")
+echo "AFTER: await noise.finishInit count = $AFTER_AWAIT (expecting 0)"
+echo "AFTER: noise.finishInit() count = $AFTER_NOISE (expecting >= 1)"
+if [ "$AFTER_AWAIT" != "0" ]; then
+  echo "FAIL: await noise.finishInit still present"
+  exit 1
+fi
+if [ "$AFTER_NOISE" -lt "1" ]; then
+  echo "FAIL: noise.finishInit() not found after patch"
+  exit 1
+fi
+dump_counts "AFTER patch 4"
+
 echo "=== Final verification ==="
 LID_AFTER=$(grep -c 'lidDbMigrated: false' "$SESSION_FILE")
 PT_AFTER=$(grep -c 'passive: true' "$SESSION_FILE")
