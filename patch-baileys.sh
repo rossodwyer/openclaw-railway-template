@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail   # added 'x'
 
 # Locate the Baileys installation (might be under @openclaw/whatsapp's deps or top-level)
 BAILEYS_PATHS=(
@@ -28,9 +28,12 @@ SOCKET=$BAILEYS/lib/Socket/socket.js
 
 # === BEFORE counts ===
 echo "=== BEFORE ==="
-echo "passive: true: $(grep -c 'passive: true' $VC)"
-echo "lidDbMigrated: false: $(grep -c 'lidDbMigrated: false' $VC)"
-echo "await noise.finishInit: $(grep -c 'await noise\.finishInit' $SOCKET)"
+PT_BEFORE=$(grep -c 'passive: true' $VC 2>/dev/null) || PT_BEFORE=0
+LID_BEFORE=$(grep -c 'lidDbMigrated: false' $VC 2>/dev/null) || LID_BEFORE=0
+AWAIT_BEFORE=$(grep -c 'await noise\.finishInit' $SOCKET 2>/dev/null) || AWAIT_BEFORE=0
+echo "passive: true: $PT_BEFORE"
+echo "lidDbMigrated: false: $LID_BEFORE"
+echo "await noise.finishInit: $AWAIT_BEFORE"
 
 # === Patch 1: passive ===
 perl -i -pe 's/passive: true,$/passive: false,/' $VC
@@ -43,10 +46,10 @@ perl -i -pe 's/await noise\.finishInit\(\);/noise.finishInit();/' $SOCKET
 
 # === AFTER counts and verification ===
 echo "=== AFTER ==="
-PT=$(grep -c 'passive: true' $VC)
-LID=$(grep -c 'lidDbMigrated: false' $VC)
-AWAIT=$(grep -c 'await noise\.finishInit' $SOCKET)
-NOISE=$(grep -c 'noise\.finishInit()' $SOCKET)
+PT=$(grep -c 'passive: true' $VC 2>/dev/null) || PT=0
+LID=$(grep -c 'lidDbMigrated: false' $VC 2>/dev/null) || LID=0
+AWAIT=$(grep -c 'await noise\.finishInit' $SOCKET 2>/dev/null) || AWAIT=0
+NOISE=$(grep -c 'noise\.finishInit()' $SOCKET 2>/dev/null) || NOISE=0
 
 echo "passive: true: $PT (expecting 0)"
 echo "lidDbMigrated: false: $LID (expecting 0)"
