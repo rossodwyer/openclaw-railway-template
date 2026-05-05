@@ -13,7 +13,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
   # Force rebuild from this point: 2026-04-26 fresh
-RUN npm install -g openclaw@2026.4.11 clawhub@latest
+RUN npm install -g openclaw@2026.5.3 https-proxy-agent && \
+    npm install -g @openclaw/whatsapp@2026.5.3
 
 # Patch OpenClaw's bundled Baileys: auth fixes + WHATSAPP_PROXY_URL injection
 COPY --chmod=755 patch-bundle.sh /tmp/patch-bundle.sh
