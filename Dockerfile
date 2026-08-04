@@ -1,4 +1,4 @@
-FROM node:22-bookworm
+FROM node:24-bookworm
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -11,15 +11,17 @@ RUN apt-get update \
     python3 \
     build-essential \
     zip \
+    tini \
   && rm -rf /var/lib/apt/lists/*
 
-# Force rebuild from this point: 2026-05-05 OpenClaw 5.3 + source-level Baileys patches
-RUN npm install -g openclaw@2026.5.3 \
-    && npm install -g @openclaw/whatsapp@2026.5.3
-
-# Patch Baileys source files (OpenClaw 5.x ships @openclaw/whatsapp with vanilla baileys)
-COPY --chmod=755 patch-baileys.sh /tmp/patch-baileys.sh
-RUN /tmp/patch-baileys.sh
+# Cache buster: 2026-08-04 — node 24, OpenClaw 7.1-2, Baileys source patches REMOVED
+# Core and the WhatsApp plugin are published separately and are NOT version-locked.
+# There is no @openclaw/whatsapp 2026.7.1-2; 2026.7.1 is the closest published build.
+# Verify before bumping:  npm view @openclaw/whatsapp versions --json | tail -20
+ARG OPENCLAW_VERSION=2026.7.1-2
+ARG WHATSAPP_VERSION=2026.7.1
+RUN npm install -g openclaw@${OPENCLAW_VERSION} clawhub@latest \
+  && npm install -g @openclaw/whatsapp@${WHATSAPP_VERSION}
 
 # Backward-compatibility shim for older OPENCLAW_ENTRY values
 RUN mkdir -p /openclaw \
@@ -51,7 +53,11 @@ ENV OPENCLAW_ENTRY=/usr/local/lib/node_modules/openclaw/dist/entry.js
 ENV NODE_PATH="/usr/local/lib/node_modules"
 
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+
+# start-period is deliberately long: the first boot on 7.x runs the legacy
+# JSON/JSONL -> SQLite migration against ~1.8 GB of history. Do not let the
+# healthcheck kill the container mid-migration.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=600s \
   CMD curl -f http://localhost:8080/setup/healthz || exit 1
 
 USER root
