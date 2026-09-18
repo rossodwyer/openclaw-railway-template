@@ -14,13 +14,8 @@ RUN apt-get update \
     tini \
   && rm -rf /var/lib/apt/lists/*
 
-# Cache buster: 2026-09-17 — OpenClaw 2.0 line (2026.9.4)
-# Core and the WhatsApp plugin are published separately and are NOT version-locked.
-# Verify before bumping:  npm view @openclaw/whatsapp versions --json | tail -20
 ARG OPENCLAW_VERSION=2026.9.4
-ARG WHATSAPP_VERSION=2026.9.4
-RUN npm install -g openclaw@${OPENCLAW_VERSION} clawhub@latest \
-  && npm install -g @openclaw/whatsapp@${WHATSAPP_VERSION}
+RUN npm install -g openclaw@${OPENCLAW_VERSION} clawhub@latest
 
 # Backward-compatibility shim for older OPENCLAW_ENTRY values
 RUN mkdir -p /openclaw \
